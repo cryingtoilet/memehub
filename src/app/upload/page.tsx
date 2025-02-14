@@ -7,13 +7,13 @@ import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import type { OurFileRouter } from "../api/uploadthing/core";
 import { UploadButton } from "@uploadthing/react";
-import type React from "react"; // Added import for React
+import type React from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "~/components/UploadDropzone";
 
 export default function UploadPage() {
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { userId } = useAuth();
@@ -23,8 +23,13 @@ export default function UploadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userId) {
-      alert("You must be signed in to upload a meme.");
+    if (!imageUrl) {
+      alert("Please upload a meme image first.");
+      return;
+    }
+
+    if (!title) {
+      alert("Please enter a title for your meme.");
       return;
     }
 
@@ -38,38 +43,26 @@ export default function UploadPage() {
           imageUrl,
           title,
           description,
-          authorId: user?.firstName + " " + user?.lastName, // Use Clerk's userId
+          authorId: userId,
         }),
       });
 
       if (response.ok) {
-        try {
-          const responseData = await response.json();
-          console.log("Meme uploaded successfully!", responseData);
-          alert("Meme uploaded successfully!");
-          router.push("/"); // Redirect to homepage
-        } catch (parseError) {
-          console.error("Error parsing JSON response:", parseError);
-          alert(
-            "Meme uploaded successfully, but there was an issue processing the server response.",
-          );
-          router.push("/");
-        }
+        router.push("/");
+        router.refresh();
       } else {
-        try {
-          const errorData = await response.json();
-          alert(`Error uploading meme: ${errorData.error || "Unknown error"}`);
-        } catch (parseError) {
-          console.error("Error parsing JSON error response:", parseError);
-          alert(
-            "Error uploading meme, and there was an issue processing the server error response.",
-          );
-        }
+        const errorData = await response.json();
+        alert(`Error creating meme: ${errorData.error || "Unknown error"}`);
       }
     } catch (error: any) {
-      console.error("Error uploading meme:", error);
-      alert(`Error uploading meme: ${error.message}`);
+      console.error("Error creating meme:", error);
+      alert(`Error creating meme: ${error.message}`);
     }
+  };
+
+  const handleUploadComplete = (url: string) => {
+    setImageUrl(url);
+    alert("Upload completed! Image URL is now ready to be used in the form.");
   };
 
   return (
@@ -91,11 +84,11 @@ export default function UploadPage() {
 
             {/* Upload Section */}
             <div className="rounded-lg bg-white/5 p-6">
-              <UploadDropzone />
+              <UploadDropzone onUploadComplete={handleUploadComplete} />
             </div>
 
             {/* Form */}
-            <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="title"
@@ -108,6 +101,8 @@ export default function UploadPage() {
                   type="text"
                   placeholder="Give your meme a catchy title"
                   className="w-full rounded-lg bg-white/5 px-4 py-3 text-base text-white/90 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
@@ -123,6 +118,8 @@ export default function UploadPage() {
                   rows={3}
                   placeholder="Add some context to your meme"
                   className="w-full rounded-lg bg-white/5 px-4 py-3 text-base text-white/90 placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
@@ -152,17 +149,24 @@ export default function UploadPage() {
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-3 pt-4">
-              <button className="rounded-lg bg-white/5 px-6 py-3 font-medium text-white/75 transition-all hover:bg-white/10">
-                Cancel
-              </button>
-              <button className="rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition-all hover:bg-orange-400">
-                Upload Meme
-              </button>
-            </div>
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  className="rounded-lg bg-white/5 px-6 py-3 font-medium text-white/75 transition-all hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <Button
+                  type="submit"
+                  className="rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition-all hover:bg-orange-400"
+                  disabled={!imageUrl}
+                >
+                  Upload Meme
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </main>

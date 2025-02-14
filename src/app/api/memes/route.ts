@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import { db } from "~/server/db"; // Import your Drizzle database instance
 import { memes, votes } from "~/server/db/schema"; // Import your Drizzle schema for memes and votes
 import { sql, eq } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
 
 // Adjust this to match your database connection and query logic
 async function getMemesFromDatabase(userId?: string) {
@@ -113,26 +114,59 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  const userId = session.userId;
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const { userId } = getAuth(request);
+    const { imageUrl, title, description } = await request.json(); // Expect imageUrl in request body
 
-    console.log("User ID from getAuth:", userId);
-
-    if (!userId) {
-      console.log("Unauthorized: User ID is null or undefined");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!imageUrl || !title) {
+      return NextResponse.json(
+        { error: "Image URL and title are required" },
+        { status: 400 },
+      );
     }
 
-    const { imageUrl, title, description } = await request.json();
-    const newMeme = await createMemeInDatabase(
+    const newMeme = await createMeme({
+      // Assuming you have a createMeme function
       imageUrl,
       title,
       description,
-      userId,
-    );
+      authorId: userId,
+    });
+
     return NextResponse.json(newMeme, { status: 201 });
   } catch (error: any) {
     console.error("Error creating meme:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+async function createMeme(memeData: {
+  imageUrl: string;
+  title: string;
+  description?: string;
+  authorId: string;
+}) {
+  const { imageUrl, title, description, authorId } = memeData;
+  try {
+    const newMeme = await db
+      .insert(memes)
+      .values({
+        id: sql`nextval('memehub_post_id_seq')`,
+        imageUrl,
+        title,
+        description,
+        authorId,
+      })
+      .returning();
+    return newMeme[0];
+  } catch (error: any) {
+    console.error("Database error creating meme:", error);
+    throw new Error("Failed to create meme in database");
   }
 }

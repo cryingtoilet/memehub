@@ -8,14 +8,17 @@ import type { OurFileRouter } from "~/app/api/uploadthing/core";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
-export function UploadDropzone() {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+interface UploadDropzoneProps {
+  onUploadComplete: (imageUrl: string) => void;
+}
+
+export function UploadDropzone({ onUploadComplete }: UploadDropzoneProps) {
   const [isUploading, setIsUploading] = useState(false);
 
   const { startUpload } = useUploadThing("imageUploader", {
     onClientUploadComplete: (res) => {
       if (res && res[0]) {
-        setImageUrl(res[0].url);
+        onUploadComplete(res[0].url);
         setIsUploading(false);
       }
     },
@@ -39,14 +42,14 @@ export function UploadDropzone() {
       "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
     maxFiles: 1,
-    disabled: !!imageUrl || isUploading,
+    disabled: isUploading,
   });
 
   return (
     <div>
       <div
         {...getRootProps()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/10 py-12 text-center transition-all hover:border-orange-500/50 ${isDragActive ? "border-orange-500 bg-orange-500/10" : ""} ${imageUrl || isUploading ? "pointer-events-none opacity-50" : ""}`}
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/10 py-12 text-center transition-all hover:border-orange-500/50 ${isDragActive ? "border-orange-500 bg-orange-500/10" : ""} ${isUploading ? "pointer-events-none opacity-50" : ""}`}
       >
         <input {...getInputProps()} />
         <Upload className="mb-4 h-12 w-12 text-white/50" />
@@ -56,11 +59,6 @@ export function UploadDropzone() {
           <div className="space-y-2">
             <p className="text-lg text-white/90">Uploading...</p>
             <p className="text-sm text-white/50">Please wait</p>
-          </div>
-        ) : imageUrl ? (
-          <div className="space-y-2">
-            <p className="text-lg text-green-500">Upload Completed!</p>
-            <p className="text-sm text-white/50">Image ready to use.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -73,20 +71,6 @@ export function UploadDropzone() {
           </div>
         )}
       </div>
-
-      {imageUrl && (
-        <div className="mt-4">
-          <p className="text-sm text-white/75">Uploaded Image URL:</p>
-          <a
-            href={imageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-orange-500 hover:underline"
-          >
-            {imageUrl}
-          </a>
-        </div>
-      )}
     </div>
   );
 }
