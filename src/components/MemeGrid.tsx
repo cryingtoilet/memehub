@@ -1,85 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MemeCard } from "./MemeCard";
 import { MemeModal } from "./MemeModal";
 
+// Define the Meme type (adjust to match your database schema)
 interface Meme {
-  id: number;
+  id: string;
   imageUrl: string;
   title: string;
   author: string;
   likes: number;
+  dislikes: number;
   comments: number;
+  hasLiked: boolean;
+  hasDisliked: boolean;
 }
 
-const memes: Meme[] = [
-  {
-    id: 1,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 1",
-    author: "Author 1",
-    likes: 1234,
-    comments: 56,
-  },
-  {
-    id: 2,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 2",
-    author: "Author 2",
-    likes: 987,
-    comments: 43,
-  },
-  {
-    id: 3,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 3",
-    author: "Author 3",
-    likes: 2345,
-    comments: 78,
-  },
-  {
-    id: 4,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 4",
-    author: "Author 4",
-    likes: 5678,
-    comments: 123,
-  },
-  {
-    id: 5,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 5",
-    author: "Author 5",
-    likes: 3456,
-    comments: 89,
-  },
-  {
-    id: 6,
-    imageUrl: "/placeholder.svg?height=400&width=400",
-    title: "Meme 6",
-    author: "Author 6",
-    likes: 7890,
-    comments: 234,
-  },
-];
-
 export function MemeGrid() {
-  const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
+  const [memes, setMemes] = useState<Meme[]>([]);
+  const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchMemes() {
+      try {
+        // Replace with your actual API endpoint
+        const response = await fetch("/api/memes");
+        const data = await response.json();
+        console.log("Memes data from API:", data);
+        setMemes(data);
+      } catch (error) {
+        console.error("Error fetching memes:", error);
+        // Handle error appropriately (e.g., display an error message)
+      }
+    }
+
+    fetchMemes();
+  }, []);
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 p-6 md:grid-cols-2 lg:grid-cols-3">
         {memes.map((meme) => (
           <MemeCard
             key={meme.id}
             {...meme}
-            onClick={() => setSelectedMeme(meme)}
+            hasLiked={meme.hasLiked}
+            hasDisliked={meme.hasDisliked}
+            onClick={() => setSelectedMeme(meme.id)}
           />
         ))}
       </div>
       <MemeModal
-        meme={selectedMeme}
+        meme={
+          selectedMeme
+            ? memes.find((meme) => meme.id === selectedMeme) || null
+            : null
+        }
         isOpen={!!selectedMeme}
         onClose={() => setSelectedMeme(null)}
       />

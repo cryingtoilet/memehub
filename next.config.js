@@ -11,6 +11,26 @@ const config = {
     },
     typescript: {
         ignoreBuildErrors: true,
+    },
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'utfs.io',
+                port: '',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'img.clerk.com',
+                port: '',
+                pathname: '/**',
+            },
+            // Add other allowed hostnames here
+        ],
+    },
+    env: {
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     }
 };
 

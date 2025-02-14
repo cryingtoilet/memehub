@@ -1,36 +1,34 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
-import { sql } from "drizzle-orm";
 import {
-  index,
+  pgTable,
   integer,
-  pgTableCreator,
-  timestamp,
-  varchar,
+  text,
+  primaryKey,
+  boolean,
 } from "drizzle-orm/pg-core";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = pgTableCreator((name) => `memehub_${name}`);
+export const memes = pgTable("memehub_post", {
+  id: integer("id").primaryKey(),
+  imageUrl: text("image_url").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  authorId: text("author_id").notNull(),
+  likes: integer("likes").default(0),
+  dislikes: integer("dislikes").default(0),
+  comments: integer("comments").default(0),
+});
 
-export const posts = createTable(
-  "post",
+export const votes = pgTable(
+  "votes",
   {
-    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
-    name: varchar("name", { length: 256 }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date()
-    ),
+    userId: text("user_id").notNull(),
+    memeId: integer("meme_id")
+      .notNull()
+      .references(() => memes.id),
+    isLike: boolean("is_like").notNull(),
   },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
-  })
+  (table) => {
+    return {
+      pk: primaryKey(table.userId, table.memeId),
+    };
+  },
 );
