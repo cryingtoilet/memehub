@@ -23,6 +23,8 @@ export default function UploadPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("handleSubmit called, imageUrl:", imageUrl);
+
     if (!imageUrl) {
       alert("Please upload a meme image first.");
       return;
@@ -60,11 +62,6 @@ export default function UploadPage() {
     }
   };
 
-  const handleUploadComplete = (url: string) => {
-    setImageUrl(url);
-    alert("Upload completed! Image URL is now ready to be used in the form.");
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -84,7 +81,7 @@ export default function UploadPage() {
 
             {/* Upload Section */}
             <div className="rounded-lg bg-white/5 p-6">
-              <UploadDropzone onUploadComplete={handleUploadComplete} />
+              <UploadDropzone setImageUrl={setImageUrl} />
             </div>
 
             {/* Form */}

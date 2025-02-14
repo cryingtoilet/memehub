@@ -5,20 +5,22 @@ import { Upload } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "~/app/api/uploadthing/core";
+import imageCompression from "browser-image-compression";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
-interface UploadDropzoneProps {
-  onUploadComplete: (imageUrl: string) => void;
+interface Props {
+  setImageUrl: (url: string | null) => void;
 }
 
-export function UploadDropzone({ onUploadComplete }: UploadDropzoneProps) {
+export function UploadDropzone({ setImageUrl }: Props) {
   const [isUploading, setIsUploading] = useState(false);
 
   const { startUpload } = useUploadThing("imageUploader", {
     onClientUploadComplete: (res) => {
+      console.log("onClientUploadComplete called", res);
       if (res && res[0]) {
-        onUploadComplete(res[0].url);
+        setImageUrl(res[0].url);
         setIsUploading(false);
       }
     },
@@ -31,7 +33,26 @@ export function UploadDropzone({ onUploadComplete }: UploadDropzoneProps) {
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setIsUploading(true);
-      await startUpload(acceptedFiles);
+      let compressedFiles: File[] = [];
+
+      try {
+        compressedFiles = await Promise.all(
+          acceptedFiles.map(async (file) => {
+            const compressedFile = await imageCompression(file, {
+              maxSizeMB: 1,
+              useWebWorker: true,
+              initialQuality: 0.1,
+            });
+            return compressedFile;
+          }),
+        );
+
+        await startUpload(compressedFiles);
+      } catch (error) {
+        console.error("Image compression error:", error);
+        alert("Error compressing images before upload.");
+        setIsUploading(false);
+      }
     },
     [startUpload],
   );
@@ -42,6 +63,7 @@ export function UploadDropzone({ onUploadComplete }: UploadDropzoneProps) {
       "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
     maxFiles: 1,
+    // disabled: !!imageUrl || isUploading,
     disabled: isUploading,
   });
 
