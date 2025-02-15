@@ -134,27 +134,31 @@ export default function UploadPage() {
                     "Memes",
                     "Trending",
                   ].map((tag) => (
-                    <button
+                    <Button
                       key={tag}
+                      type="button"
                       className="rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/75 transition-all hover:bg-white/10 hover:text-orange-500"
                     >
                       {tag}
-                    </button>
+                    </Button>
                   ))}
-                  <button className="rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/75 transition-all hover:bg-white/10 hover:text-orange-500">
+                  <Button
+                    type="button"
+                    className="rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/75 transition-all hover:bg-white/10 hover:text-orange-500"
+                  >
                     + Add Tag
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               {/* Submit Button */}
               <div className="flex justify-end space-x-3 pt-4">
-                <button
+                <Button
                   type="button"
                   className="rounded-lg bg-white/5 px-6 py-3 font-medium text-white/75 transition-all hover:bg-white/10"
                 >
                   Cancel
-                </button>
+                </Button>
                 <Button
                   type="submit"
                   className="rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition-all hover:bg-orange-400"
