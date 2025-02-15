@@ -9,18 +9,35 @@ import { auth } from "@clerk/nextjs/server";
 async function getMemesFromDatabase(userId?: string) {
   try {
     // Use Drizzle to query the database
-    const memeList = await db
-      .select({
-        id: memes.id,
-        imageUrl: memes.imageUrl,
-        title: memes.title,
-        authorId: memes.authorId,
-        likes: memes.likes,
-        dislikes: memes.dislikes,
-        comments: memes.comments,
-      })
-      .from(memes)
-      .execute();
+    let memeList;
+    if (userId) {
+      memeList = await db
+        .select({
+          id: memes.id,
+          imageUrl: memes.imageUrl,
+          title: memes.title,
+          authorId: memes.authorId,
+          likes: memes.likes,
+          dislikes: memes.dislikes,
+          comments: memes.comments,
+        })
+        .from(memes)
+        .where(eq(memes.authorId, userId)) // Filter by userId
+        .execute();
+    } else {
+      memeList = await db
+        .select({
+          id: memes.id,
+          imageUrl: memes.imageUrl,
+          title: memes.title,
+          authorId: memes.authorId,
+          likes: memes.likes,
+          dislikes: memes.dislikes,
+          comments: memes.comments,
+        })
+        .from(memes)
+        .execute();
+    }
 
     // If there's a userId, fetch the user's votes
     let userVotes: { memeId: number; isLike: boolean }[] = [];
@@ -108,7 +125,8 @@ async function createMemeInDatabase(
 }
 
 export async function GET(request: NextRequest) {
-  const { userId } = getAuth(request);
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
   const memes = await getMemesFromDatabase(userId || undefined);
   return NextResponse.json(memes);
 }

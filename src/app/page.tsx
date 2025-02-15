@@ -6,7 +6,6 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-4xl font-bold text-primary">Trending Memes</h1>
         <MemeGrid />
       </main>
     </div>

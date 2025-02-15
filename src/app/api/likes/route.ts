@@ -85,6 +85,44 @@ async function handleVote(memeId: number, userId: string, isLike: boolean) {
   }
 }
 
+export async function GET(request: Request) {
+  const session = await auth();
+  const userId = session.userId;
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const memeId = searchParams.get("memeId");
+
+  if (!memeId) {
+    return NextResponse.json(
+      { error: "Missing memeId parameter" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const existingVote = await db.query.votes.findFirst({
+      where: (votes, { eq }) => {
+        return and(
+          eq(votes.memeId, parseInt(memeId)),
+          eq(votes.userId, userId),
+        );
+      },
+    });
+
+    const hasLiked = existingVote ? existingVote.isLike : false;
+    const hasDisliked = existingVote ? !existingVote.isLike : false;
+
+    return NextResponse.json({ hasLiked, hasDisliked }, { status: 200 });
+  } catch (error: any) {
+    console.error("Error fetching user votes:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   const session = await auth();
   const userId = session.userId;

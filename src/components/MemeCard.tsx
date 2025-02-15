@@ -39,9 +39,31 @@ export function MemeCard({
   const [isVoting, setIsVoting] = useState(false);
 
   useEffect(() => {
-    setHasLiked(initialHasLiked);
-    setHasDisliked(initialHasDisliked);
-  }, [initialHasLiked, initialHasDisliked]);
+    async function fetchUserVotes() {
+      if (userId) {
+        try {
+          const response = await fetch(`/api/likes?memeId=${id}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setHasLiked(data.hasLiked);
+            setHasDisliked(data.hasDisliked);
+          } else {
+            console.error("Error fetching user votes:", response.status);
+          }
+        } catch (error) {
+          console.error("Error fetching user votes:", error);
+        }
+      }
+    }
+
+    fetchUserVotes();
+  }, [userId, id]);
 
   const handleVote = async (isLike: boolean) => {
     if (!userId) {
@@ -131,12 +153,12 @@ export function MemeCard({
         )}
       </div>
       <div className="relative space-y-3 p-4">
-        <Link
-          href={`/img/${id}`}
+        <button
           className="block text-lg font-medium text-white/90 transition-colors hover:text-orange-500"
+          onClick={onClick}
         >
           {title}
-        </Link>
+        </button>
         <p className="text-sm font-medium text-white/50">Posted by {author}</p>
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-4">

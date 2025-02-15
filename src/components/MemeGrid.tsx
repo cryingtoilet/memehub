@@ -17,15 +17,24 @@ interface Meme {
   hasDisliked: boolean;
 }
 
-export function MemeGrid() {
+interface MemeGridProps {
+  userId?: string; // Make userId optional
+}
+
+export function MemeGrid({ userId }: MemeGridProps) {
+  // Accept userId prop
   const [memes, setMemes] = useState<Meme[]>([]);
   const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchMemes() {
       try {
+        let url = "/api/memes";
+        if (userId) {
+          url += `?userId=${userId}`; // Add userId as a query parameter
+        }
         // Replace with your actual API endpoint
-        const response = await fetch("/api/memes");
+        const response = await fetch(url);
         const data = await response.json();
         console.log("Memes data from API:", data);
         setMemes(data);
@@ -36,7 +45,7 @@ export function MemeGrid() {
     }
 
     fetchMemes();
-  }, []);
+  }, [userId]);
 
   return (
     <>

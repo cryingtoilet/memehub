@@ -58,8 +58,7 @@ export default function ProfilePage() {
             {/* My Memes Section */}
             <section className="space-y-4">
               <h2 className="text-xl font-medium text-white/90">My Memes</h2>
-              <MemeGrid />{" "}
-              {/* Replace with your actual meme grid component, possibly filtered by user */}
+              <MemeGrid userId={userId} /> {/* Pass userId to MemeGrid */}
               {/* Add "Load More" button or pagination here if needed */}
             </section>
           </div>
