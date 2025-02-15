@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   integer,
@@ -7,33 +8,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-export const memes = pgTable("memehub_post", {
-  id: integer("id").primaryKey(),
-  imageUrl: text("image_url").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  authorId: text("author_id").notNull(),
-  likes: integer("likes").default(0),
-  dislikes: integer("dislikes").default(0),
-  comments: integer("comments").default(0),
-});
-
-export const votes = pgTable(
-  "votes",
-  {
-    userId: text("user_id").notNull(),
-    memeId: integer("meme_id")
-      .notNull()
-      .references(() => memes.id),
-    isLike: boolean("is_like").notNull(),
-  },
-  (table) => {
-    return {
-      pk: primaryKey(table.userId, table.memeId),
-    };
-  },
-);
+import { memes } from "~/server/db/schema";
 
 export const comments = pgTable("comments", {
   id: integer("id").primaryKey(),
@@ -55,3 +30,11 @@ export const commentRelations = relations(comments, ({ one }) => ({
     references: [memes.id],
   }),
 }));
+
+export async function up(db: any) {
+  await db.execute(sql`CREATE SEQUENCE IF NOT EXISTS comments_id_seq;`);
+}
+
+export async function down(db: any) {
+  await db.execute(sql`DROP SEQUENCE IF EXISTS comments_id_seq;`);
+}

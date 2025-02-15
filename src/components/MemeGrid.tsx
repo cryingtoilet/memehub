@@ -6,7 +6,7 @@ import { MemeModal } from "./MemeModal";
 
 // Define the Meme type (adjust to match your database schema)
 interface Meme {
-  id: string;
+  id: number;
   imageUrl: string;
   title: string;
   author: string;
@@ -24,7 +24,7 @@ interface MemeGridProps {
 export function MemeGrid({ userId }: MemeGridProps) {
   // Accept userId prop
   const [memes, setMemes] = useState<Meme[]>([]);
-  const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
+  const [selectedMeme, setSelectedMeme] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchMemes() {
@@ -57,13 +57,14 @@ export function MemeGrid({ userId }: MemeGridProps) {
             hasLiked={meme.hasLiked}
             hasDisliked={meme.hasDisliked}
             onClick={() => setSelectedMeme(meme.id)}
+            id={meme.id.toString()}
           />
         ))}
       </div>
       <MemeModal
         meme={
           selectedMeme
-            ? memes.find((meme) => meme.id === selectedMeme) || null
+            ? (memes.find((meme) => meme.id === selectedMeme) as Meme) || null
             : null
         }
         isOpen={!!selectedMeme}
